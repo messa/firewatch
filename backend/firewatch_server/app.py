@@ -1,7 +1,11 @@
 from aiohttp.web import Application, AppRunner, TCPSite
 from argparse import ArgumentParser
-from asyncio import run, sleep
+from asyncio import run, sleep, create_task, wait, FIRST_COMPLETED
+from collections import namedtuple
+from datetime import datetime
 from logging import getLogger
+from random import random
+from time import monotonic as monotime
 
 from .configuration import Configuration
 from .views import routes as views_routes
@@ -34,6 +38,14 @@ def setup_logging():
 
 
 async def async_main(conf):
+    tasks = [
+        create_task(run_web(conf=conf)),
+        create_task(run_workers(conf=conf)),
+    ]
+    done, pending = await wait(tasks, return_when=FIRST_COMPLETED)
+
+
+async def run_web(conf):
     app = await get_app(conf=conf)
     runner = AppRunner(app)
     await runner.setup()
@@ -46,3 +58,48 @@ async def async_main(conf):
             await sleep(3600)
     finally:
         await runner.cleanup()
+
+
+async def run_workers(conf):
+    tasks = []
+    for check in conf.http_checks:
+        tasks.append(create_task(run_check(check)))
+    done, pending = await wait(tasks, return_when=FIRST_COMPLETED)
+
+
+
+async def run_check(check):
+    await sleep(random()) # do not start everything at once
+    while True:
+        logger.debug('run_check: %r', check)
+        try:
+            result = await perform_check(check)
+            logger.debug('result: %r', result)
+        except Exception as e:
+            logger.exception('perform_check(%r) failed: %r', check, e)
+        await sleep(check.interval)
+
+
+async def perform_check(check):
+    from aiohttp import ClientSession
+    async with ClientSession() as session:
+        start_time = datetime.utcnow()
+        mt0 = monotime()
+        async with session.get(check.url) as response:
+            mt1 = monotime()
+            content = await response.read()
+            mt2 = monotime()
+            logger.debug('response.status: %r', response.status)
+            logger.debug('response.headers: %r', response.headers)
+            if len(content) <= 100:
+                logger.debug('response content: %r', content)
+            else:
+                logger.debug('response content: %r...', content[:120])
+            return CheckResult(
+                time=start_time,
+                duration_headers=mt1 - mt0,
+                total_duration=mt2 - mt0,
+                status_ok=response.status >= 200 and response.status < 300)
+
+
+CheckResult = namedtuple('CheckResult', 'time duration_headers total_duration status_ok')

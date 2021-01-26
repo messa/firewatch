@@ -27,5 +27,14 @@ class Configuration:
 
 class HTTPCheck:
 
+    default_interval = 30 # in seconds
+
     def __init__(self, data):
+        self.check_id = data.get('id') or data['url']
         self.url = data['url']
+        self.interval = float(data.get('interval') or self.default_interval) # in seconds
+        assert isinstance(self.check_id, str)
+        assert isinstance(self.url, str)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.check_id!r} url={self.url!r}>"
