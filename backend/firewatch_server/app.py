@@ -8,15 +8,17 @@ from random import random
 from time import monotonic as monotime
 
 from .configuration import Configuration
+from .model import Model
 from .views import routes as views_routes
 
 
 logger = getLogger(__name__)
 
 
-async def get_app(conf):
+async def get_app(conf, model):
     app = Application()
     app['http_checks'] = conf.http_checks
+    app['model'] = model
     app.router.add_routes(views_routes)
     return app
 
@@ -38,15 +40,16 @@ def setup_logging():
 
 
 async def async_main(conf):
+    model = Model()
     tasks = [
-        create_task(run_web(conf=conf)),
-        create_task(run_workers(conf=conf)),
+        create_task(run_web(conf=conf, model=model)),
+        create_task(run_checks(conf=conf, model=model)),
     ]
     done, pending = await wait(tasks, return_when=FIRST_COMPLETED)
 
 
-async def run_web(conf):
-    app = await get_app(conf=conf)
+async def run_web(conf, model):
+    app = await get_app(conf=conf, model=model)
     runner = AppRunner(app)
     await runner.setup()
     try:
@@ -60,23 +63,24 @@ async def run_web(conf):
         await runner.cleanup()
 
 
-async def run_workers(conf):
+async def run_checks(conf, model):
     tasks = []
     for check in conf.http_checks:
-        tasks.append(create_task(run_check(check)))
+        tasks.append(create_task(run_check(check=check, model=model)))
     done, pending = await wait(tasks, return_when=FIRST_COMPLETED)
 
 
-
-async def run_check(check):
+async def run_check(check, model):
     await sleep(random()) # do not start everything at once
     while True:
         logger.debug('run_check: %r', check)
         try:
             result = await perform_check(check)
-            logger.debug('result: %r', result)
         except Exception as e:
             logger.exception('perform_check(%r) failed: %r', check, e)
+        else:
+            logger.debug('result: %r', result)
+            await model.store_check_result(check, result)
         await sleep(check.interval)
 
 
