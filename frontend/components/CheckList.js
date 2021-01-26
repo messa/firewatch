@@ -11,8 +11,8 @@ function CheckList() {
   return (
     <div>
       <h2>HTTP Checks</h2>
-      {data && data.http_checks.map(check => (
-        <div>
+      {data && data.http_checks.map((check, i) => (
+        <div key={i}>
           <p>URL: <code>{check.url}</code></p>
         </div>
       ))}
