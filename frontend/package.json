@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "description": "React/Next.js frontend for the Firewatch monitoring tool",
   "scripts": {
+    "dev": "next",
+    "export": "rm -rf out && next build && next export",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "MIT",
