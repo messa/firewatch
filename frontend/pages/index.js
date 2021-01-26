@@ -6,7 +6,6 @@ function IndexPage() {
   return (
     <Layout>
       <h1>Firewatch</h1>
-      <p>Hello World!</p>
       <CheckList />
     </Layout>
   )
