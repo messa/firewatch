@@ -1,0 +1,3 @@
+http_checks:
+  - url: https://ip.messa.cz/
+  - url: https://ip4.messa.cz/

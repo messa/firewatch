@@ -1,3 +1,4 @@
 cchardet
 aiodns
 aiohttp
+PyYAML

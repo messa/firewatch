@@ -14,7 +14,8 @@ async def list_checks_handler(request):
     return json_response({
         'http_checks': [
             {
-                'url': 'https://ip.messa.cz/',
-            },
+                'url': check.url,
+            }
+            for check in request.app['http_checks']
         ],
     })
