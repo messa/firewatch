@@ -41,6 +41,14 @@ img {
   margin: 0 auto;
 }
 
+table {
+  border-collapse: collapse;
+}
+
 th {
   text-align: left;
+}
+
+td, th {
+  padding: 3px 9px;
 }

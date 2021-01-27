@@ -28,14 +28,14 @@ function CheckList() {
       {data && (
         <table style={{ minWidth: '80%' }}>
           <thead>
-            <tr>
+            <tr style={{ borderBottom: '1px solid #333' }}>
               <th>URL</th>
               <th colSpan={3}>Last result</th>
             </tr>
           </thead>
-          <tbody>
-            {data.http_checks.map((check, i) => (
-              <tr key={i}>
+          {data.http_checks.map((check, i) => (
+            <tbody key={i} style={{ borderBottom: '1px solid #aaa' }}>
+              <tr>
                 <td>
                   <code>{check.url}</code>
                 </td>
@@ -49,8 +49,8 @@ function CheckList() {
                   {check.last_result && `${check.last_result.total_duration.toFixed(3)}\xa0s`}
                 </td>
               </tr>
-            ))}
-          </tbody>
+            </tbody>
+          ))}
         </table>
       )}
     </div>
