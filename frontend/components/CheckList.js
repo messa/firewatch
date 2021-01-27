@@ -1,5 +1,6 @@
 import React from 'react'
 import useSWR from 'swr'
+import Link from 'next/link'
 import ShowDate from './ShowDate'
 
 async function fetcher(...args) {
@@ -29,6 +30,7 @@ function CheckList() {
         <table style={{ minWidth: '80%' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #333' }}>
+              <th>Id</th>
               <th>URL</th>
               <th colSpan={3}>Last result</th>
             </tr>
@@ -36,6 +38,13 @@ function CheckList() {
           {data.http_checks.map((check, i) => (
             <tbody key={i} style={{ borderBottom: '1px solid #aaa' }}>
               <tr>
+                <td style={{ maxWidth: '4em', textOverflow: 'ellipsis' , overflow: 'hidden' }}>
+                  <Link href={{ pathname: '/http-check', query: { checkId: check.check_id } }}>
+                    <a>
+                      <code>{check.check_id}</code>
+                    </a>
+                  </Link>
+                </td>
                 <td>
                   <code>{check.url}</code>
                 </td>
