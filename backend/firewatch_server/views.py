@@ -28,7 +28,7 @@ def export_check_result(result):
     if not result:
         return None
     return {
-        'time': result.time.strftime('%Y%m%dT%H%M%SZ'),
+        'time': result.time.strftime('%Y-%m-%dT%H:%M:%SZ'),
         'status_ok': result.status_ok,
         'total_duration': result.total_duration,
     }
