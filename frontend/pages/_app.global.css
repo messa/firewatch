@@ -1,17 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;700');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300');
+
 html,
 body {
   padding: 0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu,
-    Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: Roboto, sans-serif;
+  font-weight: 300;
   line-height: 1.6;
-  font-size: 15px;
+  font-size: 14px;
   background: #fff;
   color: #000;
 }
 
-pre {
+code, pre {
   font-family: Roboto Mono, monospace;
+  font-size: 13px;
 }
 
 * {
@@ -35,4 +39,8 @@ img {
 .container {
   width: 800px;
   margin: 0 auto;
+}
+
+th {
+  text-align: left;
 }
