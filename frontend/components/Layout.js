@@ -3,7 +3,6 @@ import Head from 'next/head'
 import Header from './Header'
 import styles from './Layout.module.css'
 
-
 function Layout({ children }) {
   return (
     <div className='Layout'>
