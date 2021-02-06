@@ -10,6 +10,7 @@ RUN npm ci
 
 COPY frontend/components components
 COPY frontend/pages pages
+COPY frontend/public public
 COPY frontend/util util
 #COPY frontend/next.config.js .
 RUN npm run export && ls -Ahl /src/out
