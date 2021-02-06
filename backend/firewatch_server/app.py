@@ -17,6 +17,7 @@ logger = getLogger(__name__)
 
 async def get_app(conf, model):
     app = Application()
+    app['conf'] = conf
     app['http_checks'] = conf.http_checks
     app['model'] = model
     app.router.add_routes(views_routes)

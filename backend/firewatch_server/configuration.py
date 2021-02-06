@@ -6,6 +6,8 @@ import yaml
 
 logger = getLogger(__name__)
 
+top_module_dir = Path(__file__).parent
+
 
 class ConfigurationError (Exception):
     pass
@@ -20,9 +22,16 @@ class Configuration:
         if not cfg_path:
             raise ConfigurationError('Configuration path is not set - use --conf or CONF')
         cfg_path = Path(cfg_path)
+        cfg_dir = cfg_path.parent
         cfg = yaml.safe_load(cfg_path.read_text())
         self.http_checks = [HTTPCheck(d) for d in cfg['http_checks']]
         logger.debug('Loaded %d HTTP checks from %s', len(self.http_checks), cfg_path)
+        if os.environ.get('HTML_DIR'):
+            self.html_dir = cfg_dir / os.environ.get['HTML_DIR']
+        elif cfg.get('html_dir'):
+            self.html_dir = cfg_dir / cfg['html_dir']
+        else:
+            self.html_dir = top_module_dir.parent.parent / 'frontend' / 'out'
 
 
 class HTTPCheck:
