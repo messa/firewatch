@@ -2,6 +2,7 @@
   "name": "firewatch-frontend",
   "version": "0.0.1",
   "description": "React/Next.js frontend for the Firewatch monitoring tool",
+  "repository": "github:messa/firewatch",
   "scripts": {
     "dev": "next",
     "export": "rm -rf out && next build && next export",
