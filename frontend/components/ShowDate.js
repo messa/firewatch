@@ -8,9 +8,13 @@ function ShowDate({ date }) {
   return <span>{dateObj.toLocaleString()} ({diffStr} ago)</span>
 }
 
+const floor = Math.floor
+
 function formatDifference(ms) {
   const s = Math.round(ms / 1000)
-  return `${s} s`
+  if (s < 50) return `${s} s`
+  if (s < 3600) return `${floor(s / 60)} m ${s % 60} s`
+  return `${floor(s / 3600)} h ${floor((s % 3600) / 60)} m ${s % 60} s`
 }
 
 export default ShowDate
