@@ -43,6 +43,8 @@ async def get_check_handler(request):
     })
 
 
+allowed_static_path_characters = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/_-.')
+
 @routes.get('/')
 @routes.get('/{path:.+}')
 def static_handler(request):
@@ -51,15 +53,20 @@ def static_handler(request):
     if not conf.html_dir or not conf.html_dir.is_dir():
         logger.info('conf.html_dir: %s', conf.html_dir)
         return Response(text='html_dir is not configured or does not exist\n', status=500)
-    src_path = conf.html_dir / url_path
+    if '..' in url_path or not (set(url_path) <= allowed_static_path_characters):
+        logger.info('URL path contains unsupported characters: %r', url_path)
+        return Response(text='URL path contains unsupported characters\n', status=403)
+    src_path = (conf.html_dir / url_path).resolve()
     if not src_path.exists():
         alt_path = src_path.with_name(src_path.name + '.html')
         if alt_path.is_file():
-            return FileResponse(alt_path)
-    logger.debug('src_path: %s', src_path)
+            src_path = alt_path
+    if not str(src_path).startswith(str(conf.html_dir)) or not src_path.relative_to(conf.html_dir):
+        return Response(text='Forbidden\n', status=403)
     if src_path.is_dir():
         return Response(text='Directory listing forbidden\n', status=403)
     if src_path.is_file():
+        logger.debug('Serving static file: %s', src_path)
         return FileResponse(src_path)
     return Response(text='File not found\n', status=404)
 
