@@ -8,6 +8,9 @@ import { fetcher, swrOptions } from '../util/swr'
 function CheckDetailPage() {
   const router = useRouter()
   const { checkId } = router.query
+  if (!checkId) {
+    return <Layout />
+  }
   const { data, error } = useSWR(`/api/http-checks/${encodeURIComponent(checkId)}`, fetcher, swrOptions)
   return (
     <Layout>
