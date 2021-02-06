@@ -2,12 +2,7 @@ import React from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import ShowDate from './ShowDate'
-
-async function fetcher(...args) {
-  const res = await fetch(...args)
-  const data = res.json()
-  return data
-}
+import { fetcher, swrOptions } from '../util/swr'
 
 function getStatusEmoji(ok) {
   if (ok === true) return '✅';
@@ -15,19 +10,13 @@ function getStatusEmoji(ok) {
   return '🟡';
 }
 
-const swrOptions = {
-  refreshInterval: 3 * 1000,
-  compare: (a, b) => false, // let's rerender every time to update the "ago" values
-}
-
 function CheckList() {
-  const { data, error } = useSWR('/api/checks', fetcher, swrOptions)
+  const { data, error, isValidating } = useSWR('/api/checks', fetcher, swrOptions)
   return (
     <div>
-      <h2>HTTP Checks</h2>
-      {error && <p>Failed to load</p>}
+      {error && <p style={{ color: 'red' }}>Failed to load</p>}
       {data && (
-        <table style={{ minWidth: '80%' }}>
+        <table style={{ minWidth: '80%' }} className={isValidating ? 'loading' : ''}>
           <thead>
             <tr style={{ borderBottom: '1px solid #333' }}>
               <th>Id</th>

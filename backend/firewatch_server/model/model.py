@@ -22,3 +22,10 @@ class Model:
             return results[-1]
         else:
             return None
+
+    async def get_last_check_results(self, check, limit=25):
+        results = self.check_results.get(check.check_id)
+        if results:
+            return list(reversed(results[-limit:]))
+        else:
+            return []

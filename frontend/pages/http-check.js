@@ -1,11 +1,22 @@
 import React from 'react'
+import { useRouter } from 'next/router'
+import useSWR from 'swr'
 import Layout from '../components/Layout'
-import CheckList from '../components/CheckList'
+import CheckResults from '../components/CheckResults'
+import { fetcher, swrOptions } from '../util/swr'
 
 function CheckDetailPage() {
+  const router = useRouter()
+  const { checkId } = router.query
+  const { data, error } = useSWR(`/api/http-checks/${encodeURIComponent(checkId)}`, fetcher, swrOptions)
   return (
     <Layout>
-      <h1>HTTP Check:</h1>
+      <h1>HTTP Check</h1>
+      {error && <p style={{ color: 'red' }}>Failed to load</p>}
+      <p><b>Id:</b> <code>{checkId}</code></p>
+      <p><b>URL:</b> <code>{data && data.http_check.url}</code></p>
+      <h2>Last results</h2>
+      <CheckResults checkId={checkId} />
     </Layout>
   )
 }

@@ -5,6 +5,7 @@ import CheckList from '../components/CheckList'
 function IndexPage() {
   return (
     <Layout>
+      <h2>HTTP Checks</h2>
       <CheckList />
     </Layout>
   )

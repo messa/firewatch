@@ -24,6 +24,27 @@ async def list_checks_handler(request):
     })
 
 
+@routes.get('/api/http-checks/{check_id}')
+async def get_check_handler(request):
+    model = request.app['model']
+    check, = [ch for ch in request.app['http_checks'] if ch.check_id == request.match_info['check_id']]
+    return json_response({
+        'http_check': {
+            'check_id': check.check_id,
+            'url': check.url,
+        },
+    })
+
+
+@routes.get('/api/http-checks/{check_id}/last-results')
+async def get_check_handler(request):
+    model = request.app['model']
+    check, = [ch for ch in request.app['http_checks'] if ch.check_id == request.match_info['check_id']]
+    return json_response({
+        'last_results': [export_check_result(r) for r in await model.get_last_check_results(check)],
+    })
+
+
 def export_check_result(result):
     if not result:
         return None
