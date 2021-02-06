@@ -26,12 +26,12 @@ class Configuration:
         cfg = yaml.safe_load(cfg_path.read_text())
         self.http_checks = [HTTPCheck(d) for d in cfg['http_checks']]
         logger.debug('Loaded %d HTTP checks from %s', len(self.http_checks), cfg_path)
-        if os.environ.get('HTML_DIR'):
-            self.html_dir = cfg_dir / os.environ.get['HTML_DIR']
-        elif cfg.get('html_dir'):
-            self.html_dir = cfg_dir / cfg['html_dir']
+        if os.environ.get('STATIC_DIR'):
+            self.static_dir = cfg_dir / os.environ['STATIC_DIR']
+        elif cfg.get('static_dir'):
+            self.static_dir = cfg_dir / cfg['static_dir']
         else:
-            self.html_dir = top_module_dir.parent.parent / 'frontend' / 'out'
+            self.static_dir = top_module_dir.parent.parent / 'frontend' / 'out'
 
 
 class HTTPCheck:
