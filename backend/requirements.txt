@@ -2,3 +2,5 @@ cchardet
 aiodns
 aiohttp
 PyYAML
+requests_oauthlib
+aiohttp_session[secure]

@@ -4,6 +4,21 @@
   padding: 4px 1em;
 }
 
+.header a {
+  color: #fff;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+}
+
 .siteTitle {
   font-weight: bold;
+  flex: 1;
+}
+
+.userInfo {
+  flex: 1;
+  text-align: right;
 }

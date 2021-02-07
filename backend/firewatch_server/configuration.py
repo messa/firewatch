@@ -1,6 +1,7 @@
 from logging import getLogger
 import os
 from pathlib import Path
+from secrets import token_hex
 import yaml
 
 
@@ -16,8 +17,6 @@ class ConfigurationError (Exception):
 class Configuration:
 
     def __init__(self, args):
-        self.bind_host = args.bind or ''
-        self.bind_port = int(args.port or 8000)
         cfg_path = args.conf or os.environ.get('CONF')
         if not cfg_path:
             raise ConfigurationError('Configuration path is not set - use --conf or CONF')
@@ -27,16 +26,27 @@ class Configuration:
         #self.http_checks = [HTTPCheck(d) for d in cfg['http_checks']]
         #logger.debug('Loaded %d HTTP checks from %s', len(self.http_checks), cfg_path)
 
+        self.bind_host = args.bind or ''
+        self.bind_port = int(args.port or 8000)
+
+        self.session_secret = os.environ.get('SESSION_SECRET') or cfg.get('session_secret') or token_hex()
+
         if os.environ.get('STATIC_DIR'):
             self.static_dir = cfg_dir / os.environ['STATIC_DIR']
         elif cfg.get('static_dir'):
             self.static_dir = cfg_dir / cfg['static_dir']
         else:
             self.static_dir = top_module_dir.parent.parent / 'frontend' / 'out'
+
         self.projects = [Project(proj_name, proj_cfg) for proj_name, proj_cfg in cfg['projects'].items()]
+        self.auth = Auth(cfg.get('auth') or {})
 
     def __repr__(self):
         return f"<{self.__class__.__name__} loaded from {str(cfg_path)!r}>"
+
+    @property
+    def session_secret_bytes(self):
+        return self.session_secret.encode()
 
     def get_project(self, project_id):
         for p in self.projects:
@@ -50,6 +60,22 @@ class Configuration:
             if ch.check_id == check_id:
                 return ch
         return None
+
+
+class Auth:
+
+    def __init__(self, cfg):
+        self.google_client_id = os.environ.get('GOOGLE_CLIENT_ID') or cfg.get('google_client_id')
+        self.google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET') or cfg.get('google_client_secret')
+        self.google_redirect_uri = cfg.get('google_redirect_uri')
+        self.google_scope = [
+            'openid',
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile',
+        ]
+        self.google_authorization_base_url = 'https://accounts.google.com/o/oauth2/auth'
+        self.google_fetch_token_url = 'https://www.googleapis.com/oauth2/v4/token'
+        self.google_user_info_url = 'https://www.googleapis.com/oauth2/v1/userinfo'
 
 
 class Project:

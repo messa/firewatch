@@ -3,12 +3,14 @@ from argparse import ArgumentParser
 from asyncio import run, sleep, create_task, wait, FIRST_COMPLETED
 from collections import namedtuple
 from datetime import datetime
+import hashlib
 from logging import getLogger
 from random import random
 from time import monotonic as monotime
 
 from .configuration import Configuration
 from .model import Model
+from .auth import routes as auth_routes
 from .views import routes as views_routes
 
 
@@ -19,7 +21,12 @@ async def get_app(conf, model):
     app = Application()
     app['conf'] = conf
     app['model'] = model
+    app.router.add_routes(auth_routes)
     app.router.add_routes(views_routes)
+    from aiohttp_session import setup as aiohttp_session_setup
+    from aiohttp_session.cookie_storage import EncryptedCookieStorage
+    secret_key = hashlib.sha256(conf.session_secret_bytes).digest()
+    aiohttp_session_setup(app, EncryptedCookieStorage(secret_key))
     return app
 
 
