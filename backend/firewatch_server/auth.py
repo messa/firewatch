@@ -28,9 +28,28 @@ logger = getLogger(__name__)
 routes = RouteTableDef()
 
 
-#@routes.get('/login')
-#async def login_handler(request):
-#    raise HTTPFound(location='/api/auth/google')
+@routes.get('/api/auth/login-methods')
+async def logout_handler(request):
+    conf = request.app['conf']
+    return json_response({
+        'login_methods': {
+            'dev': bool(conf.auth.dev_login_enabled),
+            'google': bool(conf.auth.google_client_id and conf.auth.google_client_secret),
+        },
+    })
+
+
+@routes.get('/api/auth/dev')
+async def dev_login_handler(request):
+    session = await new_session(request)
+    conf = request.app['conf']
+    if not conf.auth.dev_login_enabled:
+        return Response(text='Development login not enabled\n', status=403)
+    session['dev_login'] = True
+    session['user'] = {
+        'email': 'user@example.com',
+    }
+    return HTTPFound(location='/dashboard')
 
 
 @routes.get('/api/auth/google')

@@ -2,6 +2,7 @@ projects:
   demo_project:
     title: Demo project
     assigned_users:
+      - email: user@example.com
       - email_regex: .*
     http_checks:
       ip_messa_cz:

@@ -66,6 +66,7 @@ class Configuration:
 class Auth:
 
     def __init__(self, cfg):
+        self.dev_login_enabled = bool(os.environ.get('DEV_LOGIN'))
         self.google_client_id = os.environ.get('GOOGLE_CLIENT_ID') or cfg.get('google_client_id')
         self.google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET') or cfg.get('google_client_secret')
         self.google_redirect_uri = cfg.get('google_redirect_uri')
