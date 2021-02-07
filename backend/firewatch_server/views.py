@@ -1,4 +1,4 @@
-from aiohttp.web import Response, FileResponse, RouteTableDef, json_response
+from aiohttp.web import Response, FileResponse, RouteTableDef, json_response, HTTPForbidden
 from aiohttp_session import get_session
 from logging import getLogger
 
@@ -27,7 +27,10 @@ async def list_checks_handler(request):
 
 @routes.get('/api/projects/{project_id}')
 async def list_checks_handler(request):
+    session = await get_session(request)
     project = request.app['conf'].get_project(request.match_info['project_id'])
+    if not project.has_user_assigned(session.get('user')):
+        raise HTTPForbidden()
     return json_response({
         'project': {
             'project_id': project.project_id,
@@ -38,8 +41,11 @@ async def list_checks_handler(request):
 
 @routes.get('/api/projects/{project_id}/checks')
 async def list_checks_handler(request):
+    session = await get_session(request)
     model = request.app['model']
     project = request.app['conf'].get_project(request.match_info['project_id'])
+    if not project.has_user_assigned(session.get('user')):
+        raise HTTPForbidden()
     return json_response({
         'http_checks': [
             {
@@ -54,10 +60,13 @@ async def list_checks_handler(request):
 
 @routes.get('/api/http-checks/{check_id}')
 async def get_check_handler(request):
+    session = await get_session(request)
     model = request.app['model']
     check = request.app['conf'].get_check(request.match_info['check_id'])
     if not check or check.check_type != 'http_check':
         return Response(status=404, text='Check not found\n')
+    if not check.project.has_user_assigned(session.get('user')):
+        raise HTTPForbidden()
     return json_response({
         'http_check': {
             'check_id': check.check_id,
@@ -69,8 +78,11 @@ async def get_check_handler(request):
 
 @routes.get('/api/http-checks/{check_id}/last-results')
 async def get_check_handler(request):
+    session = await get_session(request)
     model = request.app['model']
     check = request.app['conf'].get_check(request.match_info['check_id'])
+    if not check.project.has_user_assigned(session.get('user')):
+        raise HTTPForbidden()
     return json_response({
         'last_results': [export_check_result(r) for r in await model.get_last_check_results(check)],
     })
