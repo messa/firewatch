@@ -58,3 +58,7 @@ td, th {
   opacity: 0.75;
   filter: grayscale(100%);
 }
+
+ul.big {
+  font-size: 150%;
+}

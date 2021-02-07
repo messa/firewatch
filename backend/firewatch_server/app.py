@@ -18,7 +18,6 @@ logger = getLogger(__name__)
 async def get_app(conf, model):
     app = Application()
     app['conf'] = conf
-    app['http_checks'] = conf.http_checks
     app['model'] = model
     app.router.add_routes(views_routes)
     return app
@@ -66,8 +65,9 @@ async def run_web(conf, model):
 
 async def run_checks(conf, model):
     tasks = []
-    for check in conf.http_checks:
-        tasks.append(create_task(run_check(check=check, model=model)))
+    for project in conf.projects:
+        for check in project.http_checks:
+            tasks.append(create_task(run_check(check=check, model=model)))
     done, pending = await wait(tasks, return_when=FIRST_COMPLETED)
 
 

@@ -1,3 +1,16 @@
-http_checks:
-  - url: https://ip.messa.cz/
-  - url: https://ip4.messa.cz/
+projects:
+  demo_project:
+    title: Demo project
+    http_checks:
+      ip_messa_cz:
+        url: https://ip.messa.cz/
+      ip4_messa_cz:
+        url: https://ip4.messa.cz/
+      ip6_messa_cz:
+        url: https://ip6.messa.cz/
+  other_proj:
+    http_checks:
+      time_http:
+        url: http://time.messa.cz/
+      time_https:
+        url: https://time.messa.cz/

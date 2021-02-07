@@ -10,8 +10,8 @@ function getStatusEmoji(ok) {
   return '🟡';
 }
 
-function CheckList() {
-  const { data, error, isValidating } = useSWR('/api/checks', fetcher, swrOptions)
+function CheckList({ projectId }) {
+  const { data, error, isValidating } = useSWR(`/api/projects/${encodeURIComponent(projectId)}/checks`, fetcher, swrOptions)
   return (
     <div>
       {error && <p style={{ color: 'red' }}>Failed to load</p>}

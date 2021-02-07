@@ -1,12 +1,12 @@
 import React from 'react'
 import Layout from '../components/Layout'
-import CheckList from '../components/CheckList'
+import ProjectList from '../components/ProjectList'
 
 function IndexPage() {
   return (
     <Layout>
-      <h2>HTTP Checks</h2>
-      <CheckList />
+      <h1>Projects</h1>
+      <ProjectList />
     </Layout>
   )
 }

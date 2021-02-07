@@ -7,9 +7,35 @@ logger = getLogger(__name__)
 routes = RouteTableDef()
 
 
-@routes.get('/api/checks')
+@routes.get('/api/projects')
 async def list_checks_handler(request):
     model = request.app['model']
+    return json_response({
+        'projects': [
+            {
+                'project_id': project.project_id,
+                'title': project.title,
+            }
+            for project in request.app['conf'].projects
+        ],
+    })
+
+
+@routes.get('/api/projects/{project_id}')
+async def list_checks_handler(request):
+    project = request.app['conf'].get_project(request.match_info['project_id'])
+    return json_response({
+        'project': {
+            'project_id': project.project_id,
+            'title': project.title,
+        },
+    })
+
+
+@routes.get('/api/projects/{project_id}/checks')
+async def list_checks_handler(request):
+    model = request.app['model']
+    project = request.app['conf'].get_project(request.match_info['project_id'])
     return json_response({
         'http_checks': [
             {
@@ -17,7 +43,7 @@ async def list_checks_handler(request):
                 'url': check.url,
                 'last_result': export_check_result(await model.get_last_check_result(check)),
             }
-            for check in request.app['http_checks']
+            for check in project.http_checks
         ],
     })
 
@@ -25,11 +51,14 @@ async def list_checks_handler(request):
 @routes.get('/api/http-checks/{check_id}')
 async def get_check_handler(request):
     model = request.app['model']
-    check, = [ch for ch in request.app['http_checks'] if ch.check_id == request.match_info['check_id']]
+    check = request.app['conf'].get_check(request.match_info['check_id'])
+    if not check or check.check_type != 'http_check':
+        return Response(status=404, text='Check not found\n')
     return json_response({
         'http_check': {
             'check_id': check.check_id,
             'url': check.url,
+            'interval': check.interval,
         },
     })
 
@@ -37,7 +66,7 @@ async def get_check_handler(request):
 @routes.get('/api/http-checks/{check_id}/last-results')
 async def get_check_handler(request):
     model = request.app['model']
-    check, = [ch for ch in request.app['http_checks'] if ch.check_id == request.match_info['check_id']]
+    check = request.app['conf'].get_check(request.match_info['check_id'])
     return json_response({
         'last_results': [export_check_result(r) for r in await model.get_last_check_results(check)],
     })

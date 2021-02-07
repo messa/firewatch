@@ -18,6 +18,7 @@ function CheckDetailPage() {
       {error && <p style={{ color: 'red' }}>Failed to load</p>}
       <p><b>Id:</b> <code>{checkId}</code></p>
       <p><b>URL:</b> <code>{data && data.http_check.url}</code></p>
+      <p><b>Interval:</b> {data && data.http_check.interval} s</p>
       <h2>Last results</h2>
       <CheckResults checkId={checkId} />
     </Layout>
