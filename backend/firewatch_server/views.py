@@ -1,4 +1,5 @@
 from aiohttp.web import Response, FileResponse, RouteTableDef, json_response
+from aiohttp_session import get_session
 from logging import getLogger
 
 
@@ -9,14 +10,17 @@ routes = RouteTableDef()
 
 @routes.get('/api/projects')
 async def list_checks_handler(request):
+    session = await get_session(request)
     model = request.app['model']
     return json_response({
+        'logged_in': bool(session.get('user')),
         'projects': [
             {
                 'project_id': project.project_id,
                 'title': project.title,
             }
             for project in request.app['conf'].projects
+            if project.has_user_assigned(session.get('user'))
         ],
     })
 

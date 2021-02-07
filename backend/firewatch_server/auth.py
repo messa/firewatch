@@ -6,7 +6,6 @@ Google login
 2. Click "+ Create credentials", select "OAuth client ID"
 3. Under "Authorized redirect URIs", add "http://localhost:8000/api/auth/google-callback"
 4. Copy "Client ID" and "Client secret" into Firewatch configuration
-
 '''
 
 from aiohttp.web import Response, FileResponse, RouteTableDef, json_response, HTTPFound

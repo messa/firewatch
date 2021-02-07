@@ -1,6 +1,8 @@
 projects:
   demo_project:
     title: Demo project
+    assigned_users:
+      - email_regex: .*
     http_checks:
       ip_messa_cz:
         url: https://ip.messa.cz/
@@ -9,6 +11,8 @@ projects:
       ip6_messa_cz:
         url: https://ip6.messa.cz/
   other_proj:
+    assigned_users:
+      - email_regex: ^petr.*
     http_checks:
       time_http:
         url: http://time.messa.cz/

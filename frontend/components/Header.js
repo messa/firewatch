@@ -22,15 +22,17 @@ function Header({ children }) {
           </div>
 
           <div className={styles.userInfo}>
-            {!user ? (
-              <span>
-                <small><Link href='/login'><a>(Sign in)</a></Link></small>
-              </span>
-            ) : (
-              <span>
-                👤 {user.email}{' '}
-                <small><a href='/api/auth/logout'>(Sign out)</a></small>
-              </span>
+            {data && (
+              !user ? (
+                <span>
+                  <small><Link href='/login'><a>(Sign in)</a></Link></small>
+                </span>
+              ) : (
+                <span>
+                  👤 {user.email}{' '}
+                  <small><a href='/api/auth/logout'>(Sign out)</a></small>
+                </span>
+              )
             )}
           </div>
 

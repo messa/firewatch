@@ -1,6 +1,7 @@
 from logging import getLogger
 import os
 from pathlib import Path
+import re
 from secrets import token_hex
 import yaml
 
@@ -89,9 +90,28 @@ class Project:
         self.project_id = name
         self.title = cfg.get('title') or name
         self.http_checks = [HTTPCheck(self, check_name, check_cfg) for check_name, check_cfg in cfg['http_checks'].items()]
+        self.raw_assigned_users = cfg.get('assigned_users') or []
 
     def __repr__(self):
         return f"<{self.__class__.__name__} project_id={self.check_id!r}>"
+
+    def has_user_assigned(self, user):
+        if not user:
+            return False
+        assert isinstance(user, dict)
+        user_email = user.get('email')
+        for item in self.raw_assigned_users:
+            if item.keys() == {'email'}:
+                item_email, = item.values()
+                if user_email == item_email:
+                    return True
+            elif item.keys() == {'email_regex'}:
+                item_regex, = item.values()
+                if re.search(item_regex, user_email):
+                    return True
+            else:
+                raise Exception(f"Could not interpret assigned_users configuration: {item!r}")
+        return False
 
 
 class HTTPCheck:
