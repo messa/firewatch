@@ -1,4 +1,4 @@
-from aiohttp.web import Response, FileResponse, RouteTableDef, json_response, HTTPForbidden
+from aiohttp.web import Response, FileResponse, RouteTableDef, json_response, HTTPForbidden, HTTPFound
 from aiohttp_session import get_session
 from logging import getLogger
 
@@ -92,8 +92,14 @@ allowed_static_path_characters = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP
 
 @routes.get('/')
 @routes.get('/{path:.+}')
-def static_handler(request):
-    url_path = request.match_info.get('path', 'index.html')
+async def static_handler(request):
+    url_path = request.match_info.get('path')
+    if not url_path:
+        session = await get_session(request)
+        if session.get('user'):
+            return HTTPFound(location='/dashboard')
+        else:
+            return HTTPFound(location='/login')
     conf = request.app['conf']
     if not conf.static_dir or not conf.static_dir.is_dir():
         logger.info('conf.static_dir: %s', conf.static_dir)
