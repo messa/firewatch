@@ -1,14 +1,11 @@
 from aiohttp.web import Application, AppRunner, TCPSite
 from argparse import ArgumentParser
 from asyncio import run, sleep, create_task, wait, FIRST_COMPLETED
-from collections import namedtuple
-from datetime import datetime
 import hashlib
 from logging import getLogger
-from random import random
-from time import monotonic as monotime
 
 from .configuration import Configuration
+from .checks import run_checks
 from .model import Model
 from .auth import routes as auth_routes
 from .views import routes as views_routes
@@ -68,50 +65,3 @@ async def run_web(conf, model):
             await sleep(3600)
     finally:
         await runner.cleanup()
-
-
-async def run_checks(conf, model):
-    tasks = []
-    for project in conf.projects:
-        for check in project.http_checks:
-            tasks.append(create_task(run_check(check=check, model=model)))
-    done, pending = await wait(tasks, return_when=FIRST_COMPLETED)
-
-
-async def run_check(check, model):
-    await sleep(random()) # do not start everything at once
-    while True:
-        logger.debug('run_check: %r', check)
-        try:
-            result = await perform_check(check)
-        except Exception as e:
-            logger.exception('perform_check(%r) failed: %r', check, e)
-        else:
-            logger.debug('result: %r', result)
-            await model.store_check_result(check, result)
-        await sleep(check.interval)
-
-
-async def perform_check(check):
-    from aiohttp import ClientSession
-    async with ClientSession() as session:
-        start_time = datetime.utcnow()
-        mt0 = monotime()
-        async with session.get(check.url) as response:
-            mt1 = monotime()
-            content = await response.read()
-            mt2 = monotime()
-            logger.debug('response.status: %r', response.status)
-            logger.debug('response.headers: %r', response.headers)
-            if len(content) <= 100:
-                logger.debug('response content: %r', content)
-            else:
-                logger.debug('response content: %r...', content[:120])
-            return CheckResult(
-                time=start_time,
-                duration_headers=mt1 - mt0,
-                total_duration=mt2 - mt0,
-                status_ok=response.status >= 200 and response.status < 300)
-
-
-CheckResult = namedtuple('CheckResult', 'time duration_headers total_duration status_ok')
