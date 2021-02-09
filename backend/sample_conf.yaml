@@ -11,6 +11,8 @@ projects:
         url: https://ip4.messa.cz/
       ip6_messa_cz:
         url: https://ip6.messa.cz/
+      nonexisting:
+        url: https://nonexisting-domain-gfdjkshgdsk.com/
   other_proj:
     assigned_users:
       - email_regex: ^petr.*
@@ -19,3 +21,5 @@ projects:
         url: http://time.messa.cz/
       time_https:
         url: https://time.messa.cz/
+      nonexisting:
+        url: https://nonexistingdomain-sdjgfertw.com/

@@ -30,8 +30,13 @@ function CheckResults({ checkId }) {
                 <td>
                   <ShowDate date={result.time} />
                 </td>
-                <td>
+                <td style={{ maxWidth: 300 }}>
                   {getStatusEmoji(result.status_ok)}
+                  {result.error && (
+                    <>
+                      {' '}<small>{result.error}</small>
+                    </>
+                  )}
                 </td>
                 <td>
                   {`${result.total_duration.toFixed(3)}\xa0s`}

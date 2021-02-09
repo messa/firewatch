@@ -128,5 +128,6 @@ def export_check_result(result):
     return {
         'time': result.time.strftime('%Y-%m-%dT%H:%M:%SZ'),
         'status_ok': result.status_ok,
+        'error': result.error,
         'total_duration': result.total_duration,
     }

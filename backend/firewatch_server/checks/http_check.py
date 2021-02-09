@@ -1,4 +1,4 @@
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientError
 from asyncio import sleep
 from collections import namedtuple
 from datetime import datetime
@@ -9,7 +9,7 @@ from time import monotonic as monotime
 
 logger = getLogger(__name__)
 
-HTTPCheckResult = namedtuple('HTTPCheckResult', 'time duration_headers total_duration status_ok')
+HTTPCheckResult = namedtuple('HTTPCheckResult', 'time duration_headers total_duration status_ok error')
 
 
 async def run_http_check(check, model):
@@ -30,18 +30,29 @@ async def perform_check(check):
     async with ClientSession() as session:
         start_time = datetime.utcnow()
         mt0 = monotime()
-        async with session.get(check.url) as response:
-            mt1 = monotime()
-            content = await response.read()
+        try:
+            async with session.get(check.url) as response:
+                mt1 = monotime()
+                content = await response.read()
+                mt2 = monotime()
+                logger.debug('response.status: %r', response.status)
+                logger.debug('response.headers: %r', response.headers)
+                if len(content) <= 100:
+                    logger.debug('response content: %r', content)
+                else:
+                    logger.debug('response content: %r...', content[:120])
+                return HTTPCheckResult(
+                    time=start_time,
+                    duration_headers=mt1 - mt0,
+                    total_duration=mt2 - mt0,
+                    status_ok=response.status >= 200 and response.status < 300,
+                    error=None)
+        except ClientError as e:
             mt2 = monotime()
-            logger.debug('response.status: %r', response.status)
-            logger.debug('response.headers: %r', response.headers)
-            if len(content) <= 100:
-                logger.debug('response content: %r', content)
-            else:
-                logger.debug('response content: %r...', content[:120])
+            logger.info('GET %r raised %r', check.url, e)
             return HTTPCheckResult(
                 time=start_time,
-                duration_headers=mt1 - mt0,
+                duration_headers=None,
                 total_duration=mt2 - mt0,
-                status_ok=response.status >= 200 and response.status < 300)
+                status_ok=False,
+                error=str(e))
