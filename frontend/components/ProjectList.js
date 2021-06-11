@@ -23,7 +23,7 @@ function ProjectList() {
         </ul>
       )}
       {data && !data.logged_in && (
-        <p>You are not logged in – perhaps more projects would show if you <Link href='/login'><a>sign in</a></Link>.</p>
+        <p>You are not logged in – you can <Link href='/login'><a>sign in</a></Link>.</p>
       )}
     </div>
   )

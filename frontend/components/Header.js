@@ -25,12 +25,12 @@ function Header({ children }) {
             {data && (
               !user ? (
                 <span>
-                  <small><Link href='/login'><a>(Sign in)</a></Link></small>
+                  <Link href='/login'><a className='button'>Sign in</a></Link>
                 </span>
               ) : (
                 <span>
                   👤 {user.email}{' '}
-                  <small><a href='/api/auth/logout'>(Sign out)</a></small>
+                  <a href='/api/auth/logout' className='button'>Sign out</a>
                 </span>
               )
             )}
