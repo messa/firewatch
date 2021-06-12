@@ -2,7 +2,8 @@ from aiohttp.web import Application, AppRunner, TCPSite
 from argparse import ArgumentParser
 from asyncio import run, sleep, create_task, wait, FIRST_COMPLETED
 import hashlib
-from logging import getLogger
+from logging import getLogger, Formatter
+import re
 
 from .configuration import Configuration
 from .checks import run_checks
@@ -12,6 +13,8 @@ from .views import routes as views_routes
 
 
 logger = getLogger(__name__)
+
+log_format = '%(asctime)s %(shortName)-30s %(levelname)5s: %(message)s'
 
 
 async def get_app(conf, model):
@@ -39,8 +42,20 @@ def main():
 
 
 def setup_logging():
-    from logging import DEBUG, basicConfig
-    basicConfig(level=DEBUG, format='%(asctime)s %(name)-30s %(levelname)5s: %(message)s')
+    from logging import DEBUG, StreamHandler
+    getLogger('').setLevel(DEBUG)
+    h = StreamHandler()
+    h.setFormatter(CustomFormatter(log_format))
+    h.setLevel(DEBUG)
+    getLogger('').addHandler(h)
+
+
+class CustomFormatter (Formatter):
+
+    def formatMessage(self, record):
+        assert not hasattr(record, 'shortName')
+        record.shortName = re.sub(r'^firewatch_server\.', '.', record.name)
+        return super().formatMessage(record)
 
 
 async def async_main(conf):
