@@ -22,7 +22,7 @@ Backend:
 
 Configuration: one YAML file
 
-Authentication: Google OAuth2 sign-in
+Authentication: Google OAuth2 sign-in and/or preconfigured username/password
 
 No database :)
 This thing is supposed to run in a single long-term process, it holds all data in the memory – which

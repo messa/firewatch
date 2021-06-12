@@ -9,7 +9,7 @@ function Header({ children }) {
   const { data, error } = useSWR('/api/user', fetcher)
   const user = data && data.user
   return (
-    <div className={styles.header}>
+    <header className={styles.header}>
       <div className='container'>
         <div className={styles.headerContent}>
 
@@ -38,7 +38,7 @@ function Header({ children }) {
 
         </div>
       </div>
-    </div>
+    </header>
   )
 }
 

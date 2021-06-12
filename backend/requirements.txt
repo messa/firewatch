@@ -1,3 +1,4 @@
+bcrypt
 cchardet
 aiodns
 aiohttp

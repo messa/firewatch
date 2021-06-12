@@ -8,6 +8,7 @@ Google login
 4. Copy "Client ID" and "Client secret" into Firewatch configuration
 '''
 
+import json
 from aiohttp.web import Response, FileResponse, RouteTableDef, json_response, HTTPFound
 from aiohttp_session import get_session, new_session
 from asyncio import get_running_loop
@@ -35,6 +36,7 @@ async def logout_handler(request):
         'login_methods': {
             'dev': bool(conf.auth.dev_login_enabled),
             'google': bool(conf.auth.google_client_id and conf.auth.google_client_secret),
+            'password': bool(conf.auth.any_user_has_a_password()),
         },
     })
 
@@ -45,11 +47,29 @@ async def dev_login_handler(request):
     conf = request.app['conf']
     if not conf.auth.dev_login_enabled:
         return Response(text='Development login not enabled\n', status=403)
-    session['dev_login'] = True
     session['user'] = {
         'email': 'user@example.com',
+        'auth_source': 'dev_login',
     }
     return HTTPFound(location='/dashboard')
+
+
+@routes.post('/api/auth/password')
+async def password_login_handler(request):
+    session = await new_session(request)
+    conf = request.app['conf']
+    data = await request.json()
+    user = conf.auth.get_user_by_password(data['email'], data['password'])
+    if not user:
+        return json_response({'ok': False, 'code': 'invalid_credentials'})
+    else:
+        logger.info('Logging in user: %r', user)
+        session['user'] = {
+            'id': user.id,
+            'email': user.email,
+            'auth_source': 'password',
+        }
+        return json_response({'ok': True})
 
 
 @routes.get('/api/auth/google')
@@ -68,7 +88,9 @@ async def google_login_handler(request):
     if not conf.auth.google_client_id or not conf.auth.google_client_secret:
         return Response(text='Google auth not configured\n', status=500)
 
-    def sync_code(conf):
+    # requwsts_oauthlib doesn't not support asyncio so let's run it in a thread:
+
+    def get_oauth_url_and_state(conf):
         oauth = OAuth2Session(
             conf.auth.google_client_id,
             redirect_uri=redirect_uri,
@@ -79,7 +101,7 @@ async def google_login_handler(request):
             access_type="offline", prompt="select_account")
         return authorization_url, state
 
-    authorization_url, state = await to_thread(sync_code, conf=conf)
+    authorization_url, state = await to_thread(get_oauth_url_and_state, conf=conf)
     logger.debug('Google authorization_url: %s', authorization_url)
 
     session = await new_session(request)
@@ -98,7 +120,9 @@ async def google_login_callback_handler(request):
         logger.info('State mismatch')
         raise HTTPFound(location='/login')
 
-    def sync_code(conf, code):
+    # requwsts_oauthlib doesn't not support asyncio so let's run it in a thread:
+
+    def retrieve_token(conf, code):
         oauth = OAuth2Session(
             conf.auth.google_client_id,
             redirect_uri=session['google_redirect_uri'],
@@ -114,19 +138,22 @@ async def google_login_callback_handler(request):
         return token, me
 
     try:
-        token, me = await to_thread(sync_code, conf=conf, code=request.query['code'])
+        token, me = await to_thread(retrieve_token, conf=conf, code=request.query['code'])
     except Exception as e:
         logger.info('Processing Google callback failed: %r', e)
         raise HTTPFound(location='/login')
 
-    #logger.debug('Google token: %r', token)
-    #logger.debug('Google me: %r', me)
+    logger.debug('Google token: %r', token)
+    logger.debug('Google me: %r', me)
 
     if not me['verified_email']:
         return Response(text='Google returned user info with unverified e-mail\n', status=403)
 
     session = await new_session(request)
-    session['user'] = me
+    session['user'] = {
+        'email': me['email'],
+        'auth_source': 'google',
+    }
     session['google_token'] = token
     return HTTPFound(location='/dashboard')
 

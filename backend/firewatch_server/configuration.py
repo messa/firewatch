@@ -1,3 +1,4 @@
+import bcrypt
 from logging import getLogger
 import os
 from pathlib import Path
@@ -21,8 +22,9 @@ class Configuration:
         cfg_path = args.conf or os.environ.get('CONF')
         if not cfg_path:
             raise ConfigurationError('Configuration path is not set - use --conf or CONF')
-        cfg_path = Path(cfg_path)
+        cfg_path = self.cfg_path = Path(cfg_path)
         cfg_dir = cfg_path.parent
+        logger.debug('Loading configuration from %s', cfg_path)
         cfg = yaml.safe_load(cfg_path.read_text())
         #self.http_checks = [HTTPCheck(d) for d in cfg['http_checks']]
         #logger.debug('Loaded %d HTTP checks from %s', len(self.http_checks), cfg_path)
@@ -43,7 +45,7 @@ class Configuration:
         self.auth = Auth(cfg.get('auth') or {})
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} loaded from {str(cfg_path)!r}>"
+        return f"<{self.__class__.__name__} loaded from {self.cfg_path}>"
 
     @property
     def session_secret_bytes(self):
@@ -56,7 +58,8 @@ class Configuration:
         return None
 
     def get_check(self, check_id):
-        p = self.get_project(check_id.split(':')[0])
+        project_id = check_id.split(':')[0]
+        p = self.get_project(project_id)
         for ch in p.http_checks:
             if ch.check_id == check_id:
                 return ch
@@ -78,6 +81,41 @@ class Auth:
         self.google_authorization_base_url = 'https://accounts.google.com/o/oauth2/auth'
         self.google_fetch_token_url = 'https://www.googleapis.com/oauth2/v4/token'
         self.google_user_info_url = 'https://www.googleapis.com/oauth2/v1/userinfo'
+        self.users = []
+        self.user_by_id = {}
+        for user_key, user_data in cfg.get('users', {}).items():
+            user = User(user_key, user_data or {})
+            self.users.append(user)
+            self.user_by_id[user.id] = user
+
+    def any_user_has_a_password(self):
+        return any(u.has_password() for u in self.users)
+
+    def get_user_by_password(self, email, password):
+        for u in self.users:
+            if u.email == email:
+                if u.verify_password(password):
+                    return u
+        return None
+
+
+class User:
+
+    def __init__(self, key, cfg):
+        self.id = key or cfg.get('id')
+        self.email = key or cfg.get('email')
+        self.password_bcrypt = cfg.get('password_bcrypt')
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} id={self.id!r} email={self.email!r}>'
+
+    def has_password(self):
+        return bool(self.password_bcrypt)
+
+    def verify_password(self, password):
+        if self.password_bcrypt:
+            return bcrypt.checkpw(password.encode('utf-8'), self.password_bcrypt.encode('ascii'))
+        return False
 
 
 class Project:
